@@ -11,7 +11,7 @@
 + Newtonsoft.Json
 
 ### Ejecucion del proyecto
-dotnetrun
+dotnet run
 
 ### Construido con 🛠️
 
