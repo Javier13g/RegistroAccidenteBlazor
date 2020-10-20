@@ -2,7 +2,7 @@
 ### Pre-requisitos 📋
 + Visual Studio Code o Visual Studio
 
-### Lista de nuget necesarios para el proyecio 🔧
+### Lista de nuget necesarios para el proyecto 🔧
 
 + Microsoft.EntityFrameworkCore.Sqlite
 + Microsoft.EntityFrameworkCore.Tools
@@ -10,6 +10,8 @@
 + Microsoft.EntityFrameworkCore
 + Newtonsoft.Json
 
+### Ejecucion del proyecto
+dotnetrun
 
 ### Construido con 🛠️
 
