@@ -1,0 +1,553 @@
+﻿
+@page "/reportes"
+@using System.Linq;
+@using Parcial.Data;
+@using System;
+@using System.Collections.Generic;
+@using System.Text;
+@using System.Threading.Tasks;
+@inject ReporteService RVV
+@inject IJSRuntime iJSRuntime;
+@inject HttpClient http;
+<h3>Reportes</h3>
+<div style="text-align:center; justify-content:center; align-items:center ">
+    <h2>LISTA VEHICULOS</h2><br />
+    <button class="btn btn-primary" data-toggle="modal" data-target="#agregarVehiculo">
+        Agregar Vehiculo
+    </button> <br />
+    <p></p>
+    <table class="table table-primary">
+        <thead class="thead-dark">
+            <tr>
+                <th>ID Vehiculo</th>
+                <th>Placa Vehiculo</th>
+                <th>Marca Vehiculo</th>
+                <th>Modelo Vehiculo</th>
+                <th>Color Vehiculo</th>
+                <th>Descripcion</th>
+                <th>Opciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Vehiculo.Any())
+            {
+                @foreach (var VEH in Vehiculo)
+                {
+                    <tr>
+                        <td>@VEH.IdReporteVehiculo</td>
+                        <td> @VEH.PlacaVehiculo</td>
+                        <td>@VEH.MarcaVehiculo</td>
+                        <td>@VEH.ModeloVehiculo</td>
+                        <td>@VEH.ColorVehiculo</td>
+                        <td>@VEH.Descripcion</td>
+                        <td>
+                            <button class="btn btn-warning" data-toggle="modal" data-target="#editarVehiculo"
+                                    @onclick="(() => SetV(VEH))">
+                                <span class="spinner-border spinner-border-sm"></span>
+                                Editar
+                            </button>
+                            <button class="btn btn-danger" @onclick="(() => BorrarVehiculo(VEH))">
+                                <span class="spinner-border spinner-border-sm"></span>
+                                Borrar
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr><td colspan="6"><strong>NO HAY DATOS</strong></td></tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+
+<!---------------------------------------------------------------------REGISTRO DE VEHICULOS---------------------------------------------------------------------->
+
+<div class="modal fade" id="agregarVehiculo" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Agregar Reporte</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-left:auto; margin-right:auto;">
+                    <div class="">
+                        <div class="">
+                            <EditForm Model="@NuevoVehiculo">
+                                <form class="was-validated">
+                                    <div class="form-group">
+                                        <label for="placa">Placa</label>
+                                        <input type="text" id="placa" class="form-control" @bind-value="@NuevoVehiculo.PlacaVehiculo" placeholder="Digite la placa" required />
+
+                                        <div class="invalid-feedback">
+                                            La placa es requerida!!!!.
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="marca">Marca </label>
+                                        <input type="text" id="marca" class="form-control" @bind-value="@NuevoVehiculo.MarcaVehiculo"
+                                               placeholder="Digite la marca" required />
+                                        <div class="invalid-feedback">
+                                            La marca es requerida!!!!
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="modelo">Modelo</label>
+                                        <input type="text" id="modelo" class="form-control" @bind-value="@NuevoVehiculo.ModeloVehiculo"
+                                               placeholder="Digite el modelo" required />
+                                        <div class="invalid-feedback">
+                                            El modelo es requerido!!!!.
+                                        </div>
+
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="color">Color</label>
+                                        <input type="text" id="color" class="form-control" @bind-value="@NuevoVehiculo.ColorVehiculo"
+                                               placeholder="Digite el color" required />
+                                        <div class="invalid-feedback">
+                                            El color es requerido!!!!.
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="cedula">Descripcion </label>
+                                        <textarea maxlength="100" @onkeypress="Contadoor" type="text" id="mensaje" class="form-control" @bind="@NuevoVehiculo.Descripcion"
+                                                  placeholder="Digite la descripcion del vehiculo" required></textarea>
+                                        <div id="contador">0/100</div>
+                                        <div class="invalid-feedback">
+                                            La descripcion es requerida!!!!.
+                                        </div>
+                                    </div>
+                                </form>
+                            </EditForm>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" @onclick="AgregarVehiculo" data-dismiss="modal">Guardar Reporte</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!---------------------------------------------------------------------EDITAR DATOS DE VEHICULOS---------------------------------------------------------------------->
+
+<div class="modal fade" id="editarVehiculo" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Editar Reporte</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-left:auto; margin-right:auto;">
+                    <div class="">
+                        <div class="">
+                            <EditForm Model="@ActualizarVehiculo">
+                                <form class="was-validated">
+                                    <div class="form-group">
+                                        <label for="placa">Placa</label>
+                                        <input type="text" id="placa" class="form-control" @bind-value="@ActualizarVehiculo.PlacaVehiculo" placeholder="Digite la placa" required />
+
+                                        <div class="invalid-feedback">
+                                            La placa es requerida!!!!.
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="marca">Marca </label>
+                                        <input type="text" id="marca" class="form-control" @bind-value="@ActualizarVehiculo.MarcaVehiculo"
+                                               placeholder="Digite el apellido" required />
+                                        <div class="invalid-feedback">
+                                            La marca es requerida!!!!
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="modelo">Modelo</label>
+                                        <input type="text" id="modelo" class="form-control" @bind-value="@ActualizarVehiculo.ModeloVehiculo"
+                                               placeholder="Digite el modelo" required />
+                                        <div class="invalid-feedback">
+                                            El modelo es requerido!!!!.
+                                        </div>
+
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="color">Color</label>
+                                        <input type="text" id="color" class="form-control" @bind-value="@ActualizarVehiculo.ColorVehiculo"
+                                               placeholder="Digite el color" required />
+                                        <div class="invalid-feedback">
+                                            El color es requerido!!!!.
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="cedula">Cedula </label>
+                                        <textarea type="text" id="cedula" class="form-control" @bind="@ActualizarVehiculo.Descripcion"
+                                                  placeholder="Digite la descripcion del vehiculo" required></textarea>
+                                        <div class="invalid-feedback">
+                                            La descripcion es requerida!!!!.
+                                        </div>
+                                    </div>
+                                </form>
+                            </EditForm>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" @onclick="ActualizarV" data-dismiss="modal">Actualizar Vehiculo</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!---------------------------------------------------------------------TABLA PERSONAS---------------------------------------------------------------------->
+
+<div style="text-align:center; justify-content:center; align-items:center ">
+    <h2>LISTA PERSONAS</h2><br />
+    <button class="btn btn-primary" data-toggle="modal" data-target="#agregarPersona">
+        Agregar Persona
+    </button> <br />
+    <p></p>
+    <table class="table table-primary">
+        <thead class="thead-dark">
+            <tr>
+                <th>ID Persona</th>
+                <th>ID Vehiculo</th>
+                <th>Nombres</th>
+                <th>Apellidos</th>
+                <th>Cedula</th>
+                <th>Lugar del retenimiento</th>
+                <th>Opciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Personas.Any())
+            {
+                @foreach (var PER in Personas)
+                {
+                    <tr>
+                        <td>@PER.IdPersona</td>
+                        <td> @PER.IdReporteVehiculo2</td>
+                        <td>@PER.NombrePersona</td>
+                        <td>@PER.ApellidoPersona</td>
+                        <td>@PER.CedulaPersona</td>
+                        <td>@PER.LugarPersonaAtrapada</td>
+                        <td>
+                            <button class="btn btn-warning" data-toggle="modal" data-target="#editarPersona"
+                                    @onclick="(() => SetP(PER))">
+                                <span class="spinner-border spinner-border-sm"></span>
+                                Editar
+                            </button>
+                            <button class="btn btn-danger" @onclick="(() => BorrarPersona(PER))">
+                                <span class="spinner-border spinner-border-sm"></span>
+                                Borrar
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr><td colspan="6"><strong>NO HAY DATOS</strong></td></tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!---------------------------------------------------------------------REGISTRO DE PERSONAS---------------------------------------------------------------------->
+
+<div class="modal fade" id="agregarPersona" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Agregar Persona</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-left:auto; margin-right:auto;">
+                    <div class="">
+                        <div class="">
+                            <EditForm Model="@NuevaPersona">
+                                <form class="was-validated">
+                                    <div class="form-group">
+                                        <label for="buscar">Buscar </label>
+                                        <input type="text" id="buscar" class="form-control" @bind-value="@cedula" @onkeyup="ObtenerDatos" placeholder="Digite la cedula" required />
+                                        <div class="invalid-feedback">
+                                            El campo es requerido!!!!.
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="vehiculo">Vehiculo</label>
+                                        <select id="vehiculo" class="form-control" @bind="@NuevaPersona.IdReporteVehiculo2">
+                                            Seleccione el vehiculo
+                                            @foreach (var Vehi in Vehiculo)
+                                            {
+                                                <option value="@Vehi.IdReporteVehiculo">@Vehi.MarcaVehiculo, @Vehi.ModeloVehiculo, @Vehi.ColorVehiculo</option>
+                                            }
+                                        </select>
+
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="nombre">Nombre</label>
+                                        <select id="nombre" class="form-control" @bind="@NuevaPersona.NombrePersona">
+                                            <option>--Seleccione nombre</option>
+                                            <option value="@nombre">@nombre</option>
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            El nombre es requerido!!!!.
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="marca">Apellido</label>
+                                        <select id="apellido" class="form-control" @bind="@NuevaPersona.ApellidoPersona">
+                                            <option>--Seleccione apellido</option>
+                                            <option value="@apellido">@apellido</option>
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            El apellido es requerido!!!!
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="cedula">Cedula</label>
+                                        <select id="cedula" class="form-control" @bind="@NuevaPersona.CedulaPersona">
+                                            <option value="">--Selecciona la cedula--</option>
+                                            <option value="@cedulas">@cedula</option>
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            La cedula es requerido!!!!.
+                                        </div>
+
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="lugar">Lugar retenimiento</label>
+                                        <input type="text" id="lugar" class="form-control" @bind-value="@NuevaPersona.LugarPersonaAtrapada"
+                                               placeholder="Digite el lugar" required />
+                                        <div class="invalid-feedback">
+                                            El lugar es requerido!!!!.
+                                        </div>
+                                    </div>
+
+                                </form>
+                            </EditForm>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" @onclick="AgregarPersona" data-dismiss="modal">Guardar Reporte</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!---------------------------------------------------------------------EDITAR INFORMACION DE PERSONAS---------------------------------------------------------------------->
+
+<div class="modal fade" id="editarPersona" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Editar Persona</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-left:auto; margin-right:auto;">
+                    <div class="">
+                        <div class="">
+                            <EditForm Model="@ActualizarPersona">
+                                <form class="was-validated">
+                                    <div class="form-group">
+                                        <label for="buscar">Buscar </label>
+                                        <input type="text" id="buscar" class="form-control" @bind-value="@cedula" @onkeyup="ObtenerDatos" placeholder="Digite la cedula" required />
+                                        <div class="invalid-feedback">
+                                            El campo es requerido!!!!.
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="vehiculo">Vehiculo</label>
+                                        <select id="vehiculo" class="form-control" @bind="@ActualizarPersona.IdReporteVehiculo2">
+                                            Seleccione el vehiculo
+                                            @foreach (var Vehi in Vehiculo)
+                                            {
+                                                <option value="@Vehi.IdReporteVehiculo">@Vehi.MarcaVehiculo, @Vehi.ModeloVehiculo, @Vehi.ColorVehiculo</option>
+                                            }
+                                        </select>
+
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="nombre">Nombre</label>
+                                        <select id="nombre" class="form-control" @bind="@ActualizarPersona.NombrePersona">
+                                            <option>--Seleccione nombre</option>
+                                            <option value="@nombre">@nombre</option>
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            El nombre es requerido!!!!.
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="marca">Apellido</label>
+                                        <select id="apellido" class="form-control" @bind="@ActualizarPersona.ApellidoPersona">
+                                            <option>--Seleccione apellido</option>
+                                            <option value="@apellido">@apellido</option>
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            El apellido es requerido!!!!
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="cedula">Cedula</label>
+                                        <select id="cedula" class="form-control" @bind="@ActualizarPersona.CedulaPersona">
+                                            <option value="">--Selecciona la cedula--</option>
+                                            <option value="@cedulas">@cedula</option>
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            La cedula es requerido!!!!.
+                                        </div>
+
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="lugar">Lugar retenimiento</label>
+                                        <input type="text" id="lugar" class="form-control" @bind-value="@ActualizarPersona.LugarPersonaAtrapada"
+                                               placeholder="Digite el lugar" required />
+                                        <div class="invalid-feedback">
+                                            El lugar es requerido!!!!.
+                                        </div>
+                                    </div>
+
+                                </form>
+                            </EditForm>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" @onclick="ActualizarP" data-dismiss="modal">Guardar Reporte</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private async Task Contadoor()
+    {
+        await iJSRuntime.InvokeVoidAsync("FullCounter");
+    }
+
+    private ReporteVehiculo Repor = new ReporteVehiculo();
+
+
+    List<ReporteVehiculo> Vehiculo = new List<ReporteVehiculo>();
+    List<PersonaVehiculo> Personas = new List<PersonaVehiculo>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RFP();
+    }
+
+    private async Task RFP()
+    {
+        Vehiculo = await RVV.GetReporteVehiculosAsync();
+        Personas = await RVV.GetPersonaVehiculosAsync();
+    }
+
+    public ReporteVehiculo NuevoVehiculo { get; set; } = new ReporteVehiculo();
+    public PersonaVehiculo NuevaPersona { get; set; } = new PersonaVehiculo();
+
+    private async Task AgregarVehiculo()
+    {
+        await RVV.AddVehiculoAsync(NuevoVehiculo);
+        NuevoVehiculo = new ReporteVehiculo();
+        await iJSRuntime.InvokeVoidAsync("AlertGuardarVehiculo");
+
+        await RFP();
+    }
+
+    private async Task AgregarPersona()
+    {
+        await RVV.AddPersonaAsync(NuevaPersona);
+        NuevaPersona = new PersonaVehiculo();
+        await iJSRuntime.InvokeVoidAsync("AlertGuardarPersona");
+        await RFP();
+    }
+
+    ReporteVehiculo ActualizarVehiculo = new ReporteVehiculo();
+    PersonaVehiculo ActualizarPersona = new PersonaVehiculo();
+
+    private void SetV(ReporteVehiculo rv)
+    {
+        ActualizarVehiculo = rv;
+    }
+
+    private void SetP(PersonaVehiculo pv)
+    {
+        ActualizarPersona = pv;
+    }
+
+    private async Task ActualizarV()
+    {
+        await RVV.UpdateVehiculoAsync(ActualizarVehiculo);
+        await iJSRuntime.InvokeVoidAsync("AlertEditarVehiculo");
+        await RFP();
+    }
+
+    private async Task ActualizarP()
+    {
+        await RVV.UpdatePersonaAsync(ActualizarPersona);
+        await iJSRuntime.InvokeVoidAsync("AlertEditarPersona");
+        await RFP();
+    }
+
+    private async Task BorrarVehiculo(ReporteVehiculo ReporteV)
+    {
+        await RVV.DeleteVehiculoAsync(ReporteV);
+        await iJSRuntime.InvokeVoidAsync("AlertBorrarVehiculo");
+        await RFP();
+    }
+
+    private async Task BorrarPersona(PersonaVehiculo PersonaV)
+    {
+        await RVV.DeletePersonaAsync(PersonaV);
+        await iJSRuntime.InvokeVoidAsync("AlertBorrarPersona");
+        await RFP();
+    }
+
+    //API
+    string Api = "";
+    string cedula = "";
+    string nombre = "";
+    string apellido = "";
+    string cedulas = "";
+
+    public async Task ObtenerDatos()
+    {
+        Api = await http.GetStringAsync("https://api.adamix.net/apec/cedula/" + cedula);
+        var Cedula_Api = Newtonsoft.Json.JsonConvert.DeserializeObject<jsonLinea>(Api);
+        nombre = Cedula_Api.Nombres;
+        apellido = Cedula_Api.apellido1;
+        cedulas = Cedula_Api.Cedula;
+    }
+
+    public class jsonLinea
+    {
+        public string Nombres { get; set; } = "";
+        public string apellido1 { get; set; } = "";
+        public string Cedula { get; set; }
+    }
+}
